@@ -1,0 +1,33 @@
+import numpy as np
+# Sistem Persamaan Non-linear: f1(x, y) = u = x^2 + xy - 10 = 0, f2(x, y) = v = y + 3xy^2 - 57 = 0
+def f1(x, y): return x**2 + x * y - 10
+def f2(x, y): return y + 3 * x * y**2 - 57
+# Delta kecil untuk aproksimasi turunan (Finite Difference)
+DELTA_H = 1e-6
+def solve_secant_like(x0, y0, epsilon, max_iter):
+    x_r, y_r = x0, y0
+    print(f"{'r':<3}{'x':<15}{'y':<15}{'deltaX':<15}{'deltaY':<15}")
+    print(f"{0:<3}{x_r:<15.8f}{y_r:<15.8f}{0.0:<15.8f}{0.0:<15.8f}")
+    for r in range(1, max_iter + 1):
+        fx_y, fy_y = f1(x_r, y_r), f2(x_r, y_r)
+        # Aproksimasi Matriks Jacobian (Finite Difference / Secant-like)
+        du_dx_approx = (f1(x_r + DELTA_H, y_r) - fx_y) / DELTA_H
+        du_dy_approx = (f1(x_r, y_r + DELTA_H) - fx_y) / DELTA_H
+        dv_dx_approx = (f2(x_r + DELTA_H, y_r) - fy_y) / DELTA_H
+        dv_dy_approx = (f2(x_r, y_r + DELTA_H) - fy_y) / DELTA_H
+        F = np.array([fx_y, fy_y])
+        J_approx = np.array([[du_dx_approx, du_dy_approx], [dv_dx_approx, dv_dy_approx]])
+        if abs(np.linalg.det(J_approx)) < 1e-10:
+            print(f"\nError: Determinan Jacobian teraproksimasi mendekati nol pada r={r}"); return
+        step = np.linalg.solve(J_approx, -F)
+        x_new, y_new = x_r + step[0], y_r + step[1]
+        delta_x, delta_y = abs(x_new - x_r), abs(y_new - y_r)
+        x_r, y_r = x_new, y_new
+        print(f"{r:<3}{x_r:<15.8f}{y_r:<15.8f}{delta_x:<15.8f}{delta_y:<15.8f}")
+        if delta_x <= epsilon and delta_y <= epsilon:
+            print(f"\nKonvergen tercapai pada iterasi ke-{r}"); return
+    print("\nMaksimum iterasi tercapai")
+# Parameter Demonstrasi
+X0, Y0, EPSILON, MAX_ITER = 1.5, 3.5, 1e-6, 100
+print("--- Solusi 4: Metode Secant (Aproksimasi Finite-Difference Newton) untuk Sistem Non-linear ---")
+solve_secant_like(X0, Y0, EPSILON, MAX_ITER)
